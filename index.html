@@ -1,0 +1,1213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mains Answer Copy Portal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.min.js"></script>
+    <style>
+        /* Base styles for the body and main container (adaptive to system theme) */
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: #f0f2f5; /* Light grey background */
+            color: #334155; /* Default text color */
+            transition: background-color 0.3s, color 0.3s; /* Smooth transition for dark mode */
+        }
+        /* Dark mode styles for body (when html has 'dark' class) */
+        html.dark body { 
+            background-color: #1a202c; /* Dark background */
+            color: #e2e8f0; /* Light text color */
+        }
+
+        .main-container { 
+            max-width: 1400px; /* Max width for content */
+            margin: auto; /* Center align */
+            border-radius: 0.75rem; /* Rounded corners for the container */
+        }
+
+        /* Card transition effects for a more dynamic feel (adaptive for main cards) */
+        .answer-card, .gs-paper-card, .year-card, .month-card, .day-card { 
+            transition: transform 0.2s, box-shadow 0.2s; /* Smooth transition for hover effects */
+            border-radius: 0.75rem; /* Rounded corners */
+        }
+        .answer-card:hover, .gs-paper-card:hover, .year-card:hover, .month-card:hover, .day-card:hover { 
+            transform: translateY(-5px); /* Lift card slightly on hover */
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); /* Add shadow on hover */
+        }
+        /* Dark mode shadows for main cards on hover */
+        html.dark .answer-card:hover, html.dark .gs-paper-card:hover, html.dark .year-card:hover, html.dark .month-card:hover, html.dark .day-card:hover {
+            box-shadow: 0 10px 15px -3px rgba(255, 255, 255, 0.1), 0 4px 6px -2px rgba(255, 255, 255, 0.05);
+        }
+
+        .category-card { 
+            transition: transform 0.3s, box-shadow 0.3s, background-color 0.3s, color 0.3s; /* Smooth transition */
+            border-radius: 1rem; /* More rounded corners */
+            background-color: #ffffff; /* Light mode default */
+            color: #334155;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        /* Dark mode for category cards */
+        html.dark .category-card { 
+            background-color: #2d3748; /* Dark mode background */
+            color: #e2e8f0;
+            box-shadow: 0 4px 6px -1px rgba(255, 255, 255, 0.1), 0 2px 4px -1px rgba(255, 255, 255, 0.06);
+        }
+        .category-card:hover { 
+            transform: scale(1.03); /* Slightly enlarge on hover */
+            box-shadow: 0 12px 20px -5px rgba(0, 0, 0, 0.15); /* More pronounced shadow on hover */
+        }
+        html.dark .category-card:hover {
+            box-shadow: 0 12px 20px -5px rgba(255, 255, 255, 0.15);
+        }
+
+        /* Modal content styling (fixed dark theme) */
+        .modal-content { 
+            max-height: 90vh; /* Limit modal height */
+            border-radius: 1rem; /* Rounded corners for modals */
+            background-color: #1a202c; /* Always dark background */
+            color: #e2e8f0; /* Always light text */
+            transition: background-color 0.3s, color 0.3s; /* Smooth transition */
+        }
+        /* Specific modal section background and text color transitions for dark mode */
+        .modal-content .p-4 {
+            transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+        }
+        .modal-content .border-b {
+            border-color: #4a5568; /* Always dark border */
+        }
+        .modal-content .bg-gray-50 { /* Header background */
+            background-color: #1f2937; /* Always dark header background */
+        }
+        .modal-content .bg-gray-100 { /* Left panel background */
+            background-color: #2d3748; /* Always dark left panel background */
+        }
+        .modal-content .text-gray-900 {
+            color: #f8fafc; /* Always light text */
+        }
+        .modal-content .text-gray-700 {
+            color: #cbd5e1; /* Always light text */
+        }
+        .modal-content .text-gray-600 {
+            color: #a0aec0; /* Always light text */
+        }
+        .modal-content .bg-gray-200 { /* Question input background */
+            background-color: #4a5568; /* Always dark background */
+        }
+        .modal-content .bg-white { /* File preview container background */
+            background-color: #1a202c; /* Always dark file preview background */
+        }
+        .modal-content .border {
+            border-color: #4a5568; /* Always dark border */
+        }
+        /* Ensure prose content inside modal is also adaptive */
+        .modal-content .prose {
+            color: #e2e8f0; /* Always light text */
+        }
+        .modal-content .prose h3 {
+            color: #f8fafc; /* Always light text */
+        }
+        .modal-content .prose strong {
+            color: #f8fafc; /* Always light text */
+        }
+
+        /* Custom scrollbar for better aesthetics */
+        #aiReviewContent::-webkit-scrollbar, 
+        #answers-list-container::-webkit-scrollbar, 
+        #year-cards-container::-webkit-scrollbar,
+        #month-cards-container::-webkit-scrollbar, 
+        #day-cards-container::-webkit-scrollbar { 
+            width: 8px; 
+        }
+        #aiReviewContent::-webkit-scrollbar-track, 
+        #answers-list-container::-webkit-scrollbar-track,
+        #year-cards-container::-webkit-scrollbar-track,
+        #month-cards-container::-webkit-scrollbar-track,
+        #day-cards-container::-webkit-scrollbar-track { 
+            background: #f1f1f1; border-radius: 10px; 
+        }
+        html.dark #aiReviewContent::-webkit-scrollbar-track, 
+        html.dark #answers-list-container::-webkit-scrollbar-track,
+        html.dark #year-cards-container::-webkit-scrollbar-track,
+        html.dark #month-cards-container::-webkit-scrollbar-track,
+        html.dark #day-cards-container::-webkit-scrollbar-track { 
+            background: #2d3748; 
+        }
+        #aiReviewContent::-webkit-scrollbar-thumb, 
+        #answers-list-container::-webkit-scrollbar-thumb,
+        #year-cards-container::-webkit-scrollbar-thumb,
+        #month-cards-container::-webkit-scrollbar-thumb,
+        #day-cards-container::-webkit-scrollbar-thumb { 
+            background: #888; border-radius: 10px; 
+        }
+        html.dark #aiReviewContent::-webkit-scrollbar-thumb, 
+        html.dark #answers-list-container::-webkit-scrollbar-thumb,
+        html.dark #year-cards-container::-webkit-scrollbar-thumb,
+        html.dark #month-cards-container::-webkit-scrollbar-thumb,
+        html.dark #day-cards-container::-webkit-scrollbar-thumb { 
+            background: #a0aec0; 
+        }
+        #aiReviewContent::-webkit-scrollbar-thumb:hover, 
+        #answers-list-container::-webkit-scrollbar-thumb:hover,
+        #year-cards-container::-webkit-scrollbar-thumb:hover,
+        #month-cards-container::-webkit-scrollbar-thumb:hover,
+        #day-cards-container::-webkit-scrollbar-thumb:hover { 
+            background: #555; 
+        }
+        html.dark #aiReviewContent::-webkit-scrollbar-thumb:hover, 
+        html.dark #answers-list-container::-webkit-scrollbar-thumb:hover,
+        html.dark #year-cards-container::-webkit-scrollbar-thumb:hover,
+        html.dark #month-cards-container::-webkit-scrollbar-thumb:hover,
+        html.dark #day-cards-container::-webkit-scrollbar-thumb:hover { 
+            background: #cbd5e1; 
+        }
+
+        /* Typography for AI review content */
+        .prose h3 { font-size: 1.1em; font-weight: 600; margin-top: 1em; margin-bottom: 0.5em;}
+        .prose p { margin-bottom: 1em; line-height: 1.6;}
+        .prose strong { font-weight: 700; }
+        html.dark .prose h3, html.dark .prose p, html.dark .prose strong {
+            color: #e2e8f0;
+        }
+
+        /* Loader animation */
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-radius: 50%;
+            border-top: 4px solid #3498db;
+            width: 40px; height: 40px;
+            animation: spin 2s linear infinite;
+        }
+        html.dark .loader { border-color: #4a5568; border-top-color: #63b3ed; }
+        .loader-sm {
+            border: 2px solid #f3f3f3;
+            border-radius: 50%;
+            border-top: 2px solid #ffffff;
+            width: 20px; height: 20px;
+            animation: spin 1s linear infinite;
+        }
+        html.dark .loader-sm { border-color: #4a5568; border-top-color: #e2e8f0; }
+        #reviewModal .loader { border-color: #4a5568; border-top-color: #63b3ed; }
+        #reviewModal .loader-sm { border-color: #4a5568; border-top-color: #e2e8f0; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* Styles for Year, Month, and Day cards */
+        .year-card, .month-card {
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            text-align: center;
+            padding: 10px; 
+            font-size: 0.9em; 
+            font-weight: 600;
+            color: #334155;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: border-color 0.2s, background-color 0.2s, color 0.2s; 
+        }
+        html.dark .year-card, html.dark .month-card { 
+            background-color: #2d3748;
+            border-color: #4a5568;
+            color: #e2e8f0;
+        }
+        .year-card.has-answers, .month-card.has-answers { 
+            background-color: #ecfdf5; 
+            border-color: #a7f3d0;
+            color: #065f46;
+        }
+        html.dark .year-card.has-answers, html.dark .month-card.has-answers {
+            background-color: #1a3a2a; 
+            border-color: #48bb78;
+            color: #90ee90; 
+        }
+        .year-card.no-answers, .month-card.no-answers { 
+            background-color: #f1f5f9;
+            color: #94a3b8;
+            cursor: pointer;
+        }
+        html.dark .year-card.no-answers, html.dark .month-card.no-answers {
+            background-color: #1f2937; 
+            color: #64748b; 
+        }
+        .year-card.current-year, .month-card.current-month { 
+            border: 2px solid #3b82f6; 
+            box-shadow: 0 0 8px rgba(59, 130, 246, 0.3);
+            background-color: #e0f2fe; 
+            color: #0c4a6e; 
+        }
+        html.dark .year-card.current-year, html.dark .month-card.current-month {
+            background-color: #1e3a8a; 
+            border-color: #60a5fa; 
+            color: #bfdbfe; 
+        }
+        .month-card.disabled, .day-card.disabled {
+            background-color: #e5e7eb;
+            color: #9ca3af;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        html.dark .month-card.disabled, html.dark .day-card.disabled {
+            background-color: #374151;
+            color: #6b7280;
+        }
+
+
+        .day-card {
+            background-color: transparent; border: none; color: #000000; padding: 0.125rem; 
+            font-size: 1.1em; font-weight: 600; aspect-ratio: 1 / 1; 
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: color 0.1s ease-in-out; 
+        }
+        html.dark .day-card { color: #e2e8f0; }
+        .day-card:hover:not(.disabled) { color: #3b82f6; }
+        html.dark .day-card:hover:not(.disabled) { color: #60a5fa; }
+        .day-card.has-answers {
+            border: 2px solid #10b981; border-radius: 50%; 
+            box-shadow: 0 0 8px rgba(16, 185, 129, 0.3); 
+            background-color: transparent; color: #10b981; 
+            font-weight: 800; width: 40px; height: 40px; font-size: 1.3em; 
+        }
+        html.dark .day-card.has-answers { border-color: #68d391; box-shadow: 0 0 8px rgba(104, 211, 145, 0.4); color: #68d391; }
+        .day-card.no-answers { color: #000000; cursor: pointer; }
+        html.dark .day-card.no-answers { color: #a0aec0; }
+        .day-card.today {
+            border: 2px solid #3b82f6; border-radius: 50%; box-shadow: 0 0 8px rgba(59, 130, 246, 0.3);
+            background-color: transparent; color: #3b82f6; 
+            font-weight: 800; width: 40px; height: 40px; font-size: 1.3em; 
+        }
+        html.dark .day-card.today { border-color: #60a5fa; box-shadow: 0 0 8px rgba(96, 165, 250, 0.4); color: #60a5fa; }
+        
+        /* Contribution Graph Styles */
+        .graph-container {
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            overflow-x: auto;
+            padding: 1rem;
+        }
+        .day-labels {
+            display: flex;
+            flex-direction: column;
+            margin-right: 5px;
+            font-size: 10px;
+            color: #57606a;
+            padding-top: 25px; /* Align with cells */
+        }
+        html.dark .day-labels {
+            color: #a0aec0;
+        }
+        .day-labels div {
+            height: 15px; /* cell height + gap */
+            text-align: right;
+        }
+        .grid-and-months-container {
+            display: flex;
+            flex-direction: column;
+        }
+        .months-container {
+            display: flex;
+            font-size: 12px;
+            color: #57606a;
+            margin-left: 5px; /* To align with grid */
+        }
+        html.dark .months-container {
+             color: #a0aec0;
+        }
+        .contrib-grid {
+            display: grid;
+            grid-auto-flow: column;
+            grid-template-rows: repeat(7, auto);
+            gap: 3px;
+        }
+        .contrib-cell {
+            width: 12px;
+            height: 12px;
+            border-radius: 3px;
+        }
+        .contrib-level-0 { background-color: #ebedf0; }
+        .contrib-level-1 { background-color: #9be9a8; }
+        .contrib-level-2 { background-color: #40c463; }
+        .contrib-level-3 { background-color: #30a14e; }
+        .contrib-level-4 { background-color: #216e39; }
+        html.dark .contrib-level-0 { background-color: #2d333b; }
+        html.dark .contrib-level-1 { background-color: #0e4429; }
+        html.dark .contrib-level-2 { background-color: #006d32; }
+        html.dark .contrib-level-3 { background-color: #26a641; }
+        html.dark .contrib-level-4 { background-color: #39d353; }
+
+
+        /* General adaptive styles */
+        .bg-white { background-color: #ffffff; } html.dark .bg-white { background-color: #1f2937; } 
+        .text-gray-900 { color: #1a202c; } html.dark .text-gray-900 { color: #f8fafc; } 
+        .text-gray-600 { color: #4a5568; } html.dark .text-gray-600 { color: #cbd5e1; } 
+        .bg-gray-200 { background-color: #edf2f7; } html.dark .bg-gray-200 { background-color: #4a5568; } 
+        .text-gray-700 { color: #4a5568; } html.dark .text-gray-700 { color: #e2e8f0; } 
+        .bg-gray-100 { background-color: #f7fafc; } html.dark .bg-gray-100 { background-color: #1a202c; } 
+        .text-gray-500 { color: #718096; } html.dark .text-gray-500 { color: #a0aec0; } 
+        .border { border-color: #e2e8f0; } html.dark .border { border-color: #4a5568; } 
+        .bg-blue-100 { background-color: #ebf8ff; } html.dark .bg-blue-100 { background-color: #2a4365; }
+        .text-blue-600 { color: #3182ce; } html.dark .text-blue-600 { color: #63b3ed; }
+        .bg-green-100 { background-color: #f0fff4; } html.dark .bg-green-100 { background-color: #276749; }
+        .text-green-600 { color: #38a169; } html.dark .text-green-600 { color: #bbf7d0; }
+        .bg-purple-100 { background-color: #f3e8ff; } html.dark .bg-purple-100 { background-color: #553c9a; }
+        .text-purple-600 { color: #805ad5; } html.dark .text-purple-600 { color: #e9d5ff; }
+        .bg-pink-100 { background-color: #fce7f3; } html.dark .bg-pink-100 { background-color: #832759; }
+        .text-pink-700 { color: #be185d; } html.dark .text-pink-700 { color: #fbcfe8; }
+    </style>
+    <script>
+        if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+        }
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+            document.documentElement.classList.toggle('dark', event.matches);
+        });
+    </script>
+</head>
+<body class="text-gray-800 bg-gray-50 dark:text-gray-100 dark:bg-gray-900 transition-colors duration-300">
+
+    <div class="main-container p-4 md:p-8">
+        <header class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-gray-900 dark:text-gray-100">My Mains Answers- with AI evaluation <br>
+            <h5>Upload your answers and track your progress</h5></h1>
+
+
+            <p id="header-subtitle" class="text-lg text-gray-600 dark:text-gray-400 mt-2">Select a category to begin.</p>
+           
+        </header>
+
+        <div id="server-status" class="text-sm text-center mb-4 p-2 rounded-md bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200">
+            <i class="fas fa-circle-notch fa-spin"></i> Connecting to server...
+        </div>
+
+        <main id="main-view">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div data-source="Daily News Analysis" data-title="Daily News Analysis" class="source-card category-card bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg cursor-pointer flex flex-col items-center text-center">
+                    <div class="bg-blue-100 dark:bg-blue-800 text-blue-600 dark:text-blue-200 rounded-full h-20 w-20 flex items-center justify-center mb-4"><i class="fas fa-newspaper fa-2x"></i></div>
+                    <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-100">Daily News Analysis</h2>
+                    <p class="text-gray-500 dark:text-gray-400 mt-2">Review and upload answers from daily news.</p>
+                </div>
+                <div data-source="Assam Weekly News" data-title="Assam Weekly" class="source-card category-card bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg cursor-pointer flex flex-col items-center text-center">
+                    <div class="bg-green-100 dark:bg-green-800 text-green-600 dark:text-green-200 rounded-full h-20 w-20 flex items-center justify-center mb-4"><i class="fas fa-map-marked-alt fa-2x"></i></div>
+                    <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-100">Assam Weekly</h2>
+                    <p class="text-gray-500 dark:text-gray-400 mt-2">Focus on Assam-specific weekly current affairs.</p>
+                </div>
+                <div data-source="Other" data-title="Others" class="source-card category-card bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg cursor-pointer flex flex-col items-center text-center">
+                     <div class="bg-purple-100 dark:bg-purple-800 text-purple-600 dark:text-purple-200 rounded-full h-20 w-20 flex items-center justify-center mb-4"><i class="fas fa-book-open fa-2x"></i></div>
+                    <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-100">Others</h2>
+                    <p class="text-gray-500 dark:text-gray-400 mt-2">For miscellaneous topics, essays, and optionals.</p>
+                </div>
+            </div>
+            
+             <div id="contribution-section" class="mt-12 bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg hidden">
+                 <div class="flex justify-between items-center mb-4">
+                    <h2 id="contribution-title" class="text-2xl font-bold text-gray-800 dark:text-gray-100"></h2>
+                    <select id="contribution-year-selector" class="bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-md p-2"></select>
+                 </div>
+                <div id="contribution-graph" class="graph-container">
+                    </div>
+                <div class="flex justify-end items-center mt-2 text-xs text-gray-500 dark:text-gray-400 space-x-1">
+                    <span>Less</span>
+                    <div class="w-3 h-3 contrib-level-0 rounded-sm"></div>
+                    <div class="w-3 h-3 contrib-level-1 rounded-sm"></div>
+                    <div class="w-3 h-3 contrib-level-2 rounded-sm"></div>
+                    <div class="w-3 h-3 contrib-level-3 rounded-sm"></div>
+                    <div class="w-3 h-3 contrib-level-4 rounded-sm"></div>
+                    <span>More</span>
+                </div>
+            </div>
+
+        </main>
+
+        <div id="gs-paper-view" class="hidden">
+            <div class="flex items-center mb-6">
+                <button id="back-to-source-btn" class="bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 font-bold py-2 px-4 rounded-lg flex items-center">
+                    <i class="fas fa-arrow-left mr-2"></i> Back to Categories
+                </button>
+            </div>
+            <h2 id="gs-view-title" class="text-3xl font-bold text-gray-900 dark:text-gray-100 text-center mb-8">Select Paper</h2>
+            <div id="gs-cards-container" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-6"></div>
+        </div>
+        
+        <div id="year-view" class="hidden">
+             <div class="flex items-center mb-6">
+                <button id="back-to-gs-from-year-btn" class="bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 font-bold py-2 px-4 rounded-lg flex items-center">
+                    <i class="fas fa-arrow-left mr-2"></i> Back to Papers
+                </button>
+            </div>
+            <h2 id="year-view-title" class="text-3xl font-bold text-gray-900 dark:text-gray-100 text-center mb-8">Select Year</h2>
+            <div id="year-cards-container" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6"></div>
+        </div>
+
+        <div id="answers-view" class="hidden">
+            <div id="month-grid-section" class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg min-h-[400px]">
+                <button id="back-to-year-btn" class="bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 font-bold py-2 px-4 rounded-lg flex items-center mb-4">
+                    <i class="fas fa-arrow-left mr-2"></i> Back to Years
+                </button>
+                <h3 id="month-grid-title" class="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-4">Select Month</h3>
+                <div id="month-cards-container" class="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4"></div>
+                <p id="month-grid-placeholder" class="text-center text-gray-500 dark:text-gray-400 py-16 hidden">No answers found for this paper yet.</p>
+            </div>
+
+            <div id="day-grid-section" class="hidden mt-6 bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg">
+                <button id="back-to-month-grid-btn" class="bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 font-bold py-2 px-4 rounded-lg flex items-center mb-4">
+                    <i class="fas fa-arrow-left mr-2"></i> Back to Months
+                </button>
+                <h3 id="day-grid-title" class="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-4">Select Day in <span id="selected-month-name"></span>:</h3>
+                <div id="day-cards-container" class="grid grid-cols-7 gap-0.5"></div>
+                <p id="day-grid-placeholder" class="text-center text-gray-500 dark:text-gray-400 py-16 hidden">No answers found for this month.</p>
+            </div>
+
+            <div id="daily-answers-section" class="hidden mt-6 bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+                    <div>
+                        <button id="back-to-day-grid-btn" class="bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 font-bold py-2 px-4 rounded-lg flex items-center">
+                            <i class="fas fa-arrow-left mr-2"></i> Back to Days
+                        </button>
+                        <h3 id="daily-answers-title" class="text-2xl font-bold text-gray-800 dark:text-gray-100 mt-2">Answers for: </h3>
+                    </div>
+                    <button id="upload-new-answer-daily-btn" class="mt-4 md:mt-0 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-6 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <i class="fas fa-upload mr-2"></i> Upload New Answer
+                    </button>
+                </div>
+
+                <div id="answers-list-container" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4" style="min-height: 150px;"></div>
+                <p id="daily-answers-placeholder" class="text-center text-gray-500 dark:text-gray-400 py-16 hidden">No answers found for this date.</p>
+            </div>
+        </div>
+
+        <input type="file" id="main-upload-input" class="hidden" accept="image/png, image/jpeg, image/webp, application/pdf">
+    </div>
+
+    <div id="questionModal" class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 hidden">
+        <div class="bg-gray-800 rounded-lg shadow-xl p-8 w-11/12 md:w-2/3 lg:w-1/2">
+            <h3 class="text-xl font-semibold mb-6 text-gray-100">Upload Answer Details</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                 <div>
+                    <label class="block text-sm font-medium text-gray-200">Source</label>
+                    <input type="text" id="upload-source-display" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm sm:text-sm text-gray-100" disabled>
+                </div>
+                <div id="gs-paper-upload-field">
+                    <label class="block text-sm font-medium text-gray-200">GS Paper</label>
+                    <input type="text" id="upload-gs-display" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm sm:text-sm text-gray-100" disabled>
+                </div>
+                <div class="md:col-span-2">
+                    <label for="questionInput" class="block text-sm font-medium text-gray-200">Question</label>
+                    <textarea id="questionInput" rows="4" class="mt-1 block w-full border border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-gray-700 text-gray-100" placeholder="e.g., Examine the major causes, impact..."></textarea>
+                </div>
+                <div class="md:col-span-2">
+                    <label for="selectFileBtn" class="block text-sm font-medium text-gray-200">Select Answer File</label>
+                    <div class="mt-1 flex items-center space-x-2">
+                        <button type="button" id="selectFileBtn" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                            <i class="fas fa-paperclip mr-2"></i>Choose File
+                        </button>
+                        <span id="fileNameDisplay" class="text-sm text-gray-400">No file chosen</span>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-8 flex justify-end space-x-4">
+                <button id="cancelUploadBtn" class="px-6 py-2 rounded-lg text-gray-200 bg-gray-700 hover:bg-gray-600">Cancel</button>
+                <button id="confirmUploadBtn" class="px-6 py-2 rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 flex items-center justify-center">Save & Upload</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="reviewModal" class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 hidden">
+         <div class="bg-gray-800 rounded-2xl shadow-xl w-11/12 lg:w-4/5 xl:w-3/4 modal-content flex flex-col overflow-hidden">
+             <div class="p-4 border-b border-gray-700 flex justify-between items-center bg-gray-900 rounded-t-2xl">
+                <h3 id="reviewModalTitle" class="text-xl font-semibold text-gray-100">Answer Review</h3>
+                <button id="closeReviewModal" class="text-gray-400 hover:text-gray-100"><i class="fas fa-times fa-lg"></i></button>
+            </div>
+            <div class="flex-grow grid grid-cols-1 lg:grid-cols-2 gap-0 overflow-auto">
+                <div class="p-4 bg-gray-900 flex flex-col">
+                     <h4 class="text-lg font-semibold mb-2 text-gray-200">Question:</h4>
+                     <p id="answerQuestion" class="text-gray-300 mb-4 p-3 bg-gray-700 rounded-lg"></p>
+                    <div id="filePreviewContainer" class="flex-grow bg-gray-700 rounded-lg overflow-auto border border-gray-600"></div>
+                </div>
+                <div class="p-4 flex flex-col bg-gray-800">
+                    <h4 class="text-lg font-semibold mb-2 text-gray-200"><i class="fas fa-robot mr-2 text-blue-500"></i>AI Mentor's Evaluation</h4>
+                    <div id="aiReviewContent" class="flex-grow border border-gray-600 rounded-lg p-4 overflow-y-auto bg-gray-900 prose prose-sm max-w-none">
+                        <div id="reviewInitialState" class="text-center h-full flex flex-col justify-center items-center text-gray-300">
+                            <i class="fas fa-robot fa-3x mb-4 text-blue-500"></i>
+                            <p class="mb-4">Ready to get feedback on your answer?</p>
+                            <button id="startReviewBtn" class="w-full max-w-xs px-6 py-2 rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 font-semibold shadow-md">Review with AI Mentor</button>
+                        </div>
+                        <div id="reviewLoading" class="text-center h-full flex flex-col justify-center items-center hidden text-gray-300">
+                            <div class="loader"></div>
+                            <p class="mt-4">AI mentor is reviewing... This may take a moment.</p>
+                        </div>
+                        <div id="reviewResult" class="hidden text-gray-100"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Set up PDF.js worker source
+        pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.worker.min.js`;
+        
+        // // // const API_URL = ''; 
+        
+        let allAnswers = []; // Stores all fetched answers
+        let currentSource = '';
+        let currentSourceTitle = '';
+        let currentGsPaper = '';
+        let selectedYear = null;
+        let selectedMonthYear = null;
+        let selectedDate = null;
+        let graphSelectedYear = new Date().getFullYear();
+
+        // --- DOM Element References ---
+        const serverStatus = document.getElementById('server-status');
+        const headerSubtitle = document.getElementById('header-subtitle');
+        
+        // Views
+        const mainView = document.getElementById('main-view');
+        const gsPaperView = document.getElementById('gs-paper-view');
+        const yearView = document.getElementById('year-view');
+        const answersView = document.getElementById('answers-view'); 
+        
+        // Contribution Graph
+        const contributionSection = document.getElementById('contribution-section');
+        const contributionGraphEl = document.getElementById('contribution-graph');
+        const contributionTitle = document.getElementById('contribution-title');
+        const contributionYearSelector = document.getElementById('contribution-year-selector');
+
+        // Source cards
+        const sourceCards = document.querySelectorAll('.source-card');
+
+        // GS Paper View
+        const backToSourceBtn = document.getElementById('back-to-source-btn');
+        const gsViewTitle = document.getElementById('gs-view-title');
+        const gsCardsContainer = document.getElementById('gs-cards-container');
+
+        // Year View
+        const backToGsFromYearBtn = document.getElementById('back-to-gs-from-year-btn');
+        const yearViewTitle = document.getElementById('year-view-title');
+        const yearCardsContainer = document.getElementById('year-cards-container');
+
+        // Answers View (contains month, day, and daily answers)
+        const backToYearBtn = document.getElementById('back-to-year-btn');
+        const monthGridSection = document.getElementById('month-grid-section');
+        const monthGridTitle = document.getElementById('month-grid-title');
+        const monthCardsContainer = document.getElementById('month-cards-container');
+        const monthGridPlaceholder = document.getElementById('month-grid-placeholder');
+        const dayGridSection = document.getElementById('day-grid-section');
+        const backToMonthGridBtn = document.getElementById('back-to-month-grid-btn');
+        const dayGridTitle = document.getElementById('day-grid-title');
+        const selectedMonthName = document.getElementById('selected-month-name');
+        const dayCardsContainer = document.getElementById('day-cards-container');
+        const dayGridPlaceholder = document.getElementById('day-grid-placeholder');
+        const dailyAnswersSection = document.getElementById('daily-answers-section');
+        const backToDayGridBtn = document.getElementById('back-to-day-grid-btn');
+        const dailyAnswersTitle = document.getElementById('daily-answers-title');
+        const answersListContainer = document.getElementById('answers-list-container');
+        const dailyAnswersPlaceholder = document.getElementById('daily-answers-placeholder');
+        const uploadNewAnswerDailyBtn = document.getElementById('upload-new-answer-daily-btn');
+
+        // Upload functionality
+        const mainUploadInput = document.getElementById('main-upload-input');
+        const questionModal = document.getElementById('questionModal');
+        const questionInput = document.getElementById('questionInput');
+        const confirmUploadBtn = document.getElementById('confirmUploadBtn');
+        const cancelUploadBtn = document.getElementById('cancelUploadBtn');
+        const uploadSourceDisplay = document.getElementById('upload-source-display');
+        const uploadGsDisplay = document.getElementById('upload-gs-display');
+        const selectFileBtn = document.getElementById('selectFileBtn');
+        const fileNameDisplay = document.getElementById('fileNameDisplay');
+        const gsPaperUploadField = document.getElementById('gs-paper-upload-field');
+
+        // Review Modal
+        const reviewModal = document.getElementById('reviewModal');
+        const reviewModalTitle = document.getElementById('reviewModalTitle');
+        const answerQuestion = document.getElementById('answerQuestion');
+        const filePreviewContainer = document.getElementById('filePreviewContainer');
+        const closeReviewModal = document.getElementById('closeReviewModal');
+        const reviewInitialState = document.getElementById('reviewInitialState');
+        const startReviewBtn = document.getElementById('startReviewBtn');
+        const reviewLoading = document.getElementById('reviewLoading');
+        const reviewResult = document.getElementById('reviewResult');
+
+        let tempUploadFile = null;
+
+        // --- Page Navigation and State Management ---
+
+        function showView(viewToShow) {
+            mainView.classList.add('hidden');
+            gsPaperView.classList.add('hidden');
+            yearView.classList.add('hidden');
+            answersView.classList.add('hidden');
+            viewToShow.classList.remove('hidden');
+        }
+
+        function showMainView() {
+            showView(mainView);
+            headerSubtitle.textContent = 'Select a category to begin.';
+            setupContributionGraph();
+            currentSource = ''; currentSourceTitle = ''; currentGsPaper = '';
+            selectedYear = null; selectedMonthYear = null; selectedDate = null;
+        }
+
+        function showGsPaperView(source, sourceTitle) {
+            currentSource = source;
+            currentSourceTitle = sourceTitle;
+            showView(gsPaperView);
+            gsViewTitle.textContent = `${sourceTitle} - Select Paper`;
+            headerSubtitle.textContent = `Current Category: ${sourceTitle}`;
+            
+            gsCardsContainer.innerHTML = '';
+            const gsPaperCardData = [
+                { paper: 'GS-I', bgClass: 'bg-red-100 dark:bg-red-800', textClass: 'text-red-700 dark:text-red-200' },
+                { paper: 'GS-II', bgClass: 'bg-yellow-100 dark:bg-yellow-800', textClass: 'text-yellow-700 dark:text-yellow-200' },
+                { paper: 'GS-III', bgClass: 'bg-green-100 dark:bg-green-800', textClass: 'text-green-700 dark:text-green-200' },
+                { paper: 'GS-IV', bgClass: 'bg-blue-100 dark:bg-blue-800', textClass: 'text-blue-700 dark:text-blue-200' },
+                { paper: 'Essay', bgClass: 'bg-indigo-100 dark:bg-indigo-800', textClass: 'text-indigo-700 dark:text-indigo-200' },
+                { paper: 'Optional', bgClass: 'bg-purple-100 dark:bg-purple-800', textClass: 'text-purple-700 dark:text-purple-200' },
+                { paper: 'Other', bgClass: 'bg-pink-100 dark:bg-pink-800', textClass: 'text-pink-700 dark:text-pink-200' }
+            ];
+
+            gsPaperCardData.forEach((data) => {
+                const card = document.createElement('div');
+                card.className = `gs-paper-card cursor-pointer p-6 rounded-xl text-center shadow ${data.bgClass}`;
+                card.innerHTML = `<h3 class="text-xl font-bold ${data.textClass}">${data.paper}</h3>`;
+                card.addEventListener('click', () => showYearGrid(data.paper)); 
+                gsCardsContainer.appendChild(card);
+            });
+        }
+        
+        function showYearGrid(gsPaper) {
+            currentGsPaper = gsPaper;
+            showView(yearView);
+            yearViewTitle.textContent = `Select Year for ${currentSourceTitle} / ${currentGsPaper}`;
+            headerSubtitle.textContent = `Current Location: ${currentSourceTitle} / ${currentGsPaper}`;
+            renderYearCards();
+        }
+
+        function showMonthGrid(year) {
+            selectedYear = year;
+            showView(answersView);
+            monthGridSection.classList.remove('hidden');
+            dayGridSection.classList.add('hidden');
+            dailyAnswersSection.classList.add('hidden');
+            headerSubtitle.textContent = `Current Location: ${currentSourceTitle} / ${currentGsPaper} / ${selectedYear}`;
+            monthGridTitle.textContent = `Select Month for ${selectedYear}`;
+            renderMonthCards(year);
+        }
+
+        function showDayGrid(monthYear) {
+            selectedMonthYear = monthYear;
+            const monthName = new Date(monthYear + '-01').toLocaleDateString('en-US', { year: 'numeric', month: 'long' });
+            selectedMonthName.textContent = monthName;
+            monthGridSection.classList.add('hidden');
+            dayGridSection.classList.remove('hidden');
+            dailyAnswersSection.classList.add('hidden');
+            renderDayCards(monthYear);
+        }
+
+        function showAnswersForDate(dateString) {
+            selectedDate = dateString;
+            const friendlyDate = new Date(dateString).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            dailyAnswersTitle.textContent = `Answers for: ${friendlyDate}`;
+            monthGridSection.classList.add('hidden');
+            dayGridSection.classList.add('hidden');
+            dailyAnswersSection.classList.remove('hidden');
+            renderAnswersList(dateString);
+        }
+
+        // --- Data Fetching and Rendering ---
+
+        async function fetchAnswers() {
+            try {
+                // All API calls now go to /api/answers because API_URL is ''
+                const response = await fetch(`${API_URL}/api/answers`);
+                if (!response.ok) throw new Error(`Server error: ${response.status}`);
+                allAnswers = await response.json();
+                serverStatus.innerHTML = `<i class="fas fa-check-circle text-green-500 dark:text-green-400"></i> Server Connected`;
+                serverStatus.className = `text-sm text-center mb-4 p-2 rounded-md bg-green-100 dark:bg-green-800 text-green-800 dark:text-green-100`;
+                
+                // Re-render based on current view
+                if (!gsPaperView.classList.contains('hidden')) {
+                    showGsPaperView(currentSource, currentSourceTitle);
+                } else if (!yearView.classList.contains('hidden')) {
+                    renderYearCards();
+                } else if (!answersView.classList.contains('hidden')) {
+                    if (!dailyAnswersSection.classList.contains('hidden')) renderAnswersList(selectedDate);
+                    else if (!dayGridSection.classList.contains('hidden')) renderDayCards(selectedMonthYear);
+                    else renderMonthCards(selectedYear);
+                } else {
+                   showMainView();
+                }
+            } catch (error) {
+                serverStatus.innerHTML = `<i class="fas fa-exclamation-triangle text-red-500 dark:text-red-400"></i> Server Not Connected.`;
+                serverStatus.className = `text-sm text-center mb-4 p-2 rounded-md bg-red-100 dark:bg-red-800 text-red-800 dark:text-red-100`;
+                console.error(error); 
+            }
+        }
+        
+        function renderYearCards() {
+            yearCardsContainer.innerHTML = '';
+            const yearsWithAnswers = new Set(allAnswers
+                .filter(a => a.source === currentSource && a.gsPaper === currentGsPaper)
+                .map(a => a.uploadDate.substring(0, 4))
+            );
+            
+            yearsWithAnswers.add('2024');
+            yearsWithAnswers.add('2025');
+
+            const sortedYears = Array.from(yearsWithAnswers).sort((a, b) => b - a);
+            const currentActualYear = new Date().getFullYear();
+
+            sortedYears.forEach(year => {
+                const card = document.createElement('div');
+                card.className = 'year-card';
+                if (parseInt(year) === currentActualYear) {
+                    card.classList.add('current-year');
+                }
+                
+                const hasAnswersForYear = allAnswers.some(a => a.source === currentSource && a.gsPaper === currentGsPaper && a.uploadDate.startsWith(year));
+                if(hasAnswersForYear) {
+                    card.classList.add('has-answers');
+                } else {
+                    card.classList.add('no-answers');
+                }
+                
+                card.textContent = year;
+                card.addEventListener('click', () => showMonthGrid(year));
+                yearCardsContainer.appendChild(card);
+            });
+        }
+
+        function renderMonthCards(year) {
+            monthCardsContainer.innerHTML = '';
+            const uniqueMonthsWithAnswers = new Set(allAnswers
+                .filter(a => a.source === currentSource && a.gsPaper === currentGsPaper && a.uploadDate.startsWith(year))
+                .map(a => a.uploadDate.substring(0, 7))
+            );
+            
+            const today = new Date();
+            const currentActualYear = today.getFullYear();
+            const currentActualMonth = today.getMonth(); // 0-indexed
+            const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
+            let startMonthIndex = 0;
+            if (parseInt(year) === 2024) {
+                startMonthIndex = 8; // September
+            }
+
+            for (let i = startMonthIndex; i < 12; i++) {
+                const monthYearString = `${year}-${String(i + 1).padStart(2, '0')}`;
+                const hasAnswers = uniqueMonthsWithAnswers.has(monthYearString);
+
+                const card = document.createElement('div');
+                card.className = 'month-card';
+
+                const isFutureMonth = parseInt(year) > currentActualYear || (parseInt(year) === currentActualYear && i > currentActualMonth);
+
+                if (isFutureMonth) {
+                    card.classList.add('disabled');
+                } else {
+                    if (hasAnswers) card.classList.add('has-answers'); else card.classList.add('no-answers');
+                    if (parseInt(year) === currentActualYear && i === currentActualMonth) card.classList.add('current-month');
+                    card.addEventListener('click', () => showDayGrid(monthYearString));
+                }
+                
+                card.textContent = `${monthNames[i]} ${year}`;
+                monthCardsContainer.appendChild(card);
+            }
+        }
+
+        function renderDayCards(monthYear) {
+            dayCardsContainer.innerHTML = '';
+            const [year, monthIndex] = monthYear.split('-').map(Number);
+            const daysInMonth = new Date(year, monthIndex, 0).getDate();
+            const datesWithAnswersInMonth = new Set(allAnswers.filter(a => a.uploadDate.startsWith(monthYear) && a.source === currentSource && a.gsPaper === currentGsPaper).map(a => a.uploadDate));
+            
+            const today = new Date();
+            const todayString = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+            const currentTimestamp = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
+
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dateString = `${year}-${String(monthIndex).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                const card = document.createElement('div');
+                card.textContent = day;
+                card.className = 'day-card';
+
+                const dayTimestamp = new Date(year, monthIndex - 1, day).getTime();
+
+                if (dayTimestamp > currentTimestamp) {
+                    card.classList.add('disabled');
+                } else {
+                    if (datesWithAnswersInMonth.has(dateString)) card.classList.add('has-answers'); else card.classList.add('no-answers');
+                    if (dateString === todayString) card.classList.add('today');
+                    card.addEventListener('click', () => showAnswersForDate(dateString));
+                }
+                
+                dayCardsContainer.appendChild(card);
+            }
+        }
+
+
+        function renderAnswersList(dateString) {
+            const filteredAnswers = allAnswers.filter(a => a.source === currentSource && a.gsPaper === currentGsPaper && a.uploadDate === dateString);
+            answersListContainer.innerHTML = '';
+            if (filteredAnswers.length === 0) {
+                dailyAnswersPlaceholder.textContent = `No answers uploaded for ${new Date(dateString).toLocaleDateString()}. Click 'Upload New Answer' to add one.`;
+                dailyAnswersPlaceholder.classList.remove('hidden');
+                answersListContainer.classList.add('hidden');
+            } else {
+                dailyAnswersPlaceholder.classList.add('hidden');
+                answersListContainer.classList.remove('hidden');
+                filteredAnswers.sort((a,b) => new Date(b.uploadDate) - new Date(a.uploadDate)).forEach(answer => answersListContainer.appendChild(createAnswerCard(answer)));
+            }
+            
+            const today = new Date();
+            const currentTimestamp = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
+            const selectedDateParts = dateString.split('-').map(Number);
+            const selectedDateObj = new Date(selectedDateParts[0], selectedDateParts[1] - 1, selectedDateParts[2]);
+            const selectedTimestamp = new Date(selectedDateObj.getFullYear(), selectedDateObj.getMonth(), selectedDateObj.getDate()).getTime();
+
+            const shouldShowUpload = (currentSource === 'Other' || filteredAnswers.length === 0) && (selectedTimestamp <= currentTimestamp);
+            uploadNewAnswerDailyBtn.classList.toggle('hidden', !shouldShowUpload);
+        }
+        
+        // // // function createAnswerCard(answer) {
+            const card = document.createElement('div');
+            card.className = `answer-card bg-gray-50 dark:bg-gray-700 border dark:border-gray-600 rounded-lg p-2 cursor-pointer relative group flex flex-col`;
+            const isPdf = answer.mimeType === 'application/pdf';
+            const fileUrl = `${API_URL}/api/uploads/${answer.fileName}`;
+
+            const iconHtml = isPdf ? `<i class="fas fa-file-pdf fa-3x text-red-500 dark:text-red-400"></i>` : `<img src="${fileUrl}" onerror="this.onerror=null;this.src='https://placehold.co/100x100/e2e8f0/94a3b8?text=Image';" class="w-full h-full object-cover rounded-md">`;
+            card.innerHTML = `
+                <div class="relative h-20 mb-2 flex items-center justify-center bg-gray-200 dark:bg-gray-600 rounded-md overflow-hidden p-2">${iconHtml}</div> 
+                <div class="flex-grow flex flex-col justify-between">
+                    <p class="text-xs font-medium text-gray-700 dark:text-gray-200 break-words flex-grow">${answer.question.substring(0, 50)}...</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">${new Date(answer.uploadDate).toLocaleDateString()}</p>
+                </div>
+                <button data-id="${answer._id}" class="delete-btn absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hidden sm:flex">
+                    <i class="fas fa-trash-alt fa-xs"></i>
+                </button>`;
+            card.addEventListener('click', e => !e.target.closest('.delete-btn') && openReviewModal(answer));
+            card.querySelector('.delete-btn').addEventListener('click', e => { e.stopPropagation(); deleteAnswer(answer._id); });
+            return card;
+        }
+        
+        function setupContributionGraph() {
+            if (!allAnswers.length) {
+                contributionSection.classList.add('hidden');
+                return;
+            }
+            contributionSection.classList.remove('hidden');
+
+            const yearsWithAnswers = Array.from(new Set(allAnswers.map(a => a.uploadDate.substring(0, 4))));
+            const currentYear = new Date().getFullYear().toString();
+            if (!yearsWithAnswers.includes(currentYear)) {
+                yearsWithAnswers.push(currentYear);
+            }
+             if (!yearsWithAnswers.includes('2024')) {
+                yearsWithAnswers.push('2024');
+            }
+            yearsWithAnswers.sort((a,b) => b-a);
+
+            contributionYearSelector.innerHTML = '';
+            yearsWithAnswers.forEach(year => {
+                const option = document.createElement('option');
+                option.value = year;
+                option.textContent = year;
+                contributionYearSelector.appendChild(option);
+            });
+            
+            graphSelectedYear = parseInt(contributionYearSelector.value);
+            renderContributionGraph(graphSelectedYear);
+
+            contributionYearSelector.addEventListener('change', (e) => {
+                graphSelectedYear = parseInt(e.target.value);
+                renderContributionGraph(graphSelectedYear);
+            });
+        }
+
+
+        function renderContributionGraph(year) {
+            contributionGraphEl.innerHTML = ''; 
+
+            const yearAnswers = allAnswers.filter(ans => ans.uploadDate.startsWith(year));
+
+            const counts = yearAnswers.reduce((acc, ans) => {
+                acc[ans.uploadDate] = (acc[ans.uploadDate] || 0) + 1;
+                return acc;
+            }, {});
+            
+            const totalContributions = yearAnswers.length;
+            contributionTitle.textContent = `${totalContributions} submissions in ${year}`;
+
+            const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+            const gridContainer = document.createElement('div');
+            gridContainer.className = "grid-and-months-container";
+
+            const monthsContainer = document.createElement('div');
+            monthsContainer.className = "months-container";
+            monthsContainer.innerHTML = monthNames.map(m => `<div style="width: calc(100% / 12); text-align: center;">${m}</div>`).join('');
+
+
+            const grid = document.createElement('div');
+            grid.className = 'contrib-grid';
+
+            const dayLabelsContainer = document.createElement('div');
+            dayLabelsContainer.className = 'day-labels';
+            dayLabelsContainer.innerHTML = `
+                <div></div><div>Mon</div><div></div><div>Wed</div><div></div><div>Fri</div><div></div>
+            `;
+            
+            const startDate = new Date(year, 0, 1);
+            const endDate = new Date(year, 11, 31);
+            let date = new Date(startDate);
+            
+            // Add padding for the first day of the year
+            const firstDay = startDate.getDay();
+            for (let i = 0; i < (firstDay === 0 ? 6 : firstDay - 1); i++) {
+                grid.appendChild(document.createElement('div'));
+            }
+
+            while(date <= endDate) {
+                const dateString = date.toISOString().split('T')[0];
+                const count = counts[dateString] || 0;
+                
+                const cell = document.createElement('div');
+                cell.className = 'contrib-cell';
+
+                // Specific logic for 2024 to disable months before September
+                if(year === 2024 && date.getMonth() < 8) { // month is 0-indexed, so 8 is September
+                    cell.classList.add('disabled');
+                    cell.title = 'N/A';
+                } else {
+                    let level = 0;
+                    if (count > 0 && count <= 2) level = 1;
+                    else if (count > 2 && count <= 4) level = 2;
+                    else if (count > 4 && count <= 6) level = 3;
+                    else if (count > 6) level = 4;
+                    cell.classList.add(`contrib-level-${level}`);
+                    cell.title = `${count} submission(s) on ${date.toDateString()}`;
+                }
+
+                grid.appendChild(cell);
+                date.setDate(date.getDate() + 1);
+            }
+            
+            gridContainer.appendChild(monthsContainer);
+            gridContainer.appendChild(grid);
+            contributionGraphEl.appendChild(dayLabelsContainer);
+            contributionGraphEl.appendChild(gridContainer);
+        }
+
+
+        // --- Event Listeners ---
+        document.addEventListener('DOMContentLoaded', fetchAnswers);
+        sourceCards.forEach(card => card.addEventListener('click', () => {
+            contributionSection.classList.add('hidden');
+            showGsPaperView(card.dataset.source, card.dataset.title);
+        }));
+        backToSourceBtn.addEventListener('click', showMainView);
+        backToGsFromYearBtn.addEventListener('click', () => showGsPaperView(currentSource, currentSourceTitle));
+        backToYearBtn.addEventListener('click', () => showYearGrid(currentGsPaper));
+        backToMonthGridBtn.addEventListener('click', () => showMonthGrid(selectedYear));
+        backToDayGridBtn.addEventListener('click', () => showDayGrid(selectedMonthYear));
+
+        uploadNewAnswerDailyBtn.addEventListener('click', () => {
+            uploadSourceDisplay.value = currentSourceTitle;
+            uploadGsDisplay.value = currentGsPaper;
+            gsPaperUploadField.classList.toggle('hidden', currentSource === 'Other');
+            questionInput.value = '';
+            fileNameDisplay.textContent = 'No file chosen';
+            tempUploadFile = null;
+            questionModal.classList.remove('hidden');
+            questionInput.focus();
+        });
+
+        selectFileBtn.addEventListener('click', () => mainUploadInput.click());
+        mainUploadInput.addEventListener('change', e => {
+            const file = e.target.files[0];
+            tempUploadFile = file;
+            fileNameDisplay.textContent = file ? file.name : 'No file chosen';
+        });
+
+        cancelUploadBtn.addEventListener('click', () => {
+            questionModal.classList.add('hidden');
+            mainUploadInput.value = '';
+            tempUploadFile = null;
+        });
+
+        confirmUploadBtn.addEventListener('click', async () => {
+            if (!questionInput.value.trim() || !tempUploadFile || !selectedDate) {
+                alert('Please fill all fields: Question, File, and selected Date.');
+                return;
+            }
+            confirmUploadBtn.disabled = true;
+            confirmUploadBtn.innerHTML = `<div class="loader-sm"></div>`;
+            const formData = new FormData();
+            formData.append('file', tempUploadFile);
+            formData.append('title', tempUploadFile.name);
+            formData.append('question', questionInput.value);
+            formData.append('uploadDate', selectedDate);
+            formData.append('gsPaper', currentGsPaper);
+            formData.append('source', currentSource);
+            try {
+                // All API calls now go to /api/upload
+                const response = await fetch(`${API_URL}/api/upload`, { method: 'POST', body: formData });
+                if (!response.ok) throw new Error('Upload failed');
+                await fetchAnswers();
+                questionModal.classList.add('hidden');
+                showAnswersForDate(selectedDate);
+            } catch (error) {
+                alert('An error occurred during upload.');
+                console.error('Upload error:', error);
+            } finally {
+                confirmUploadBtn.disabled = false;
+                confirmUploadBtn.textContent = 'Save & Upload';
+                tempUploadFile = null;
+                mainUploadInput.value = '';
+            }
+        });
+
+        async function deleteAnswer(id) {
+            if (!confirm('Are you sure you want to permanently delete this answer?')) return;
+            try {
+                const response = await fetch(`${API_URL}/api/answers/${id}`, { method: 'DELETE' });
+                if (!response.ok) throw new Error('Deletion failed');
+                await fetchAnswers();
+                if(selectedDate) showAnswersForDate(selectedDate);
+            } catch (error) {
+                alert('Failed to delete answer.');
+                console.error('Delete error:', error);
+            }
+        }
+        
+        // // // function openReviewModal(answer) {
+            reviewModal.classList.remove('hidden');
+            reviewModalTitle.textContent = `Review: ${answer.title}`;
+            answerQuestion.textContent = answer.question;
+            const fileUrl = answer.fileName ? `${API_URL}/api/uploads/${answer.fileName}` : '';
+            reviewModal.dataset.fileUrl = fileUrl;
+            reviewModal.dataset.question = answer.question;
+            reviewModal.dataset.mimeType = answer.mimeType;
+            filePreviewContainer.innerHTML = '';
+            if (fileUrl && answer.mimeType.startsWith('image/')) {
+                filePreviewContainer.innerHTML = `<img src="${fileUrl}" class="w-full h-auto rounded-lg">`;
+            } else if (fileUrl && answer.mimeType === 'application/pdf') {
+                filePreviewContainer.innerHTML = `<embed src="${fileUrl}" type="application/pdf" class="w-full h-full rounded-lg">`;
+            } else {
+                filePreviewContainer.innerHTML = `<p class="text-center text-gray-400 py-4">No file preview available.</p>`;
+            }
+            startReviewBtn.disabled = !fileUrl;
+            startReviewBtn.textContent = fileUrl ? 'Review with AI Mentor' : 'No file for AI Review';
+            reviewInitialState.querySelector('p').textContent = fileUrl ? 'Ready to get feedback?' : 'Cannot review: No valid file.';
+            reviewInitialState.classList.remove('hidden');
+            reviewLoading.classList.add('hidden');
+            reviewResult.classList.add('hidden');
+        }
+
+        closeReviewModal.addEventListener('click', () => reviewModal.classList.add('hidden'));
+        startReviewBtn.addEventListener('click', fetchAIReview);
+
+        async function getAiImageData(fileUrl, mimeType) {
+            if (!fileUrl) throw new Error('File URL is missing.');
+            const response = await fetch(fileUrl);
+            const blob = await response.blob();
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onloadend = async () => {
+                    const base64 = reader.result.split(',')[1];
+                    if (mimeType.startsWith('image/')) {
+                        resolve([{ base64, mimeType }]);
+                    } else if (mimeType === 'application/pdf') {
+                        try {
+                            const pdf = await pdfjsLib.getDocument({ data: atob(base64) }).promise;
+                            const pageImages = [];
+                            for (let i = 1; i <= pdf.numPages; i++) {
+                                const page = await pdf.getPage(i);
+                                const viewport = page.getViewport({ scale: 1.5 });
+                                const canvas = document.createElement('canvas');
+                                canvas.height = viewport.height; canvas.width = viewport.width;
+                                const context = canvas.getContext('2d');
+                                await page.render({ canvasContext: context, viewport: viewport }).promise;
+                                pageImages.push({
+                                    base64: canvas.toDataURL('image/jpeg').split(',')[1],
+                                    mimeType: 'image/jpeg'
+                                });
+                            }
+                            resolve(pageImages);
+                        } catch (error) { reject(error); }
+                    } else { reject(new Error('Unsupported file type.')); }
+                };
+                reader.onerror = reject;
+                reader.readAsDataURL(blob);
+            });
+        }
+
+        async function fetchAIReview() {
+            // IMPORTANT: Replace with your actual API Key
+            const apiKey = 'AIzaSyAmWpBAfax4Xvg4cqUOuJjs-qT3lPwy6pM'; // Replace this placeholder
+            if (apiKey === 'YOUR_API_KEY_HERE') {
+                alert('Please replace "YOUR_API_KEY_HERE" with your actual Google AI API key in the script.');
+                return;
+            }
+
+            reviewInitialState.classList.add('hidden');
+            reviewLoading.classList.remove('hidden');
+            reviewResult.classList.add('hidden');
+
+            try {
+                const { fileUrl, question, mimeType } = reviewModal.dataset;
+                if (!fileUrl) {
+                    displayReview('Error: No file associated with this answer.');
+                    return;
+                }
+                const allPageImages = await getAiImageData(fileUrl, mimeType);
+                const prompt = `You are an expert UPSC Mains answer evaluator. Review the following handwritten answer based on the question. Provide structured feedback in Markdown.
+**Question:** "${question}"
+Your evaluation must follow this template:
+🧾 **Question:** ...
+📚 **Paper Type:** ...
+📌 **Directive Word Analysis:** ...
+✅ **Structure Review (Intro, Body, Conclusion):** ...
+🌟 **Strengths (2-3 points):** ...
+⚠️ **Areas for Improvement (2-3 suggestions):** ...
+📌 **Model Answer Points:** ...
+🧠 **Critical Thinking & Analysis (out of 4):** ...
+✍️ **Presentation & Language (out of 2):** ...
+📐 **Structure & Organization (out of 2):** ...
+💡 **Value Addition (Data/Examples) (out of 2):** ...
+📊 **Total Score: __/15** - [Justified Reason]
+🎯 **Final Remark:** [Motivational closing]`;
+                const payloadParts = [{ text: prompt }, ...allPageImages.map(img => ({ inlineData: { mimeType: img.mimeType, data: img.base64 } }))];
+                const payload = { contents: [{ role: "user", parts: payloadParts }] };
+                const geminiApiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro-vision:generateContent?key=${apiKey}`;
+                const response = await fetch(geminiApiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                if (!response.ok) throw new Error(`API error! Status: ${response.status} ${await response.text()}`);
+                const result = await response.json();
+                const reviewText = result.candidates?.[0]?.content?.parts?.[0]?.text || "Review could not be generated.";
+                displayReview(reviewText);
+            } catch (error) {
+                console.error("Error fetching AI review:", error);
+                displayReview(`**An Error Occurred**\n\nFailed to get review. Check the API Key and console for details. \n\nDetails: ${error.message}`);
+            } finally {
+                reviewLoading.classList.add('hidden');
+            }
+        }
+
+        function displayReview(text) {
+            // A simple markdown-to-html converter
+            let html = text
+                .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+                .replace(/^\*\* (.*$)/gim, '<strong>$1</strong>')
+                .replace(/\*\*(.*)\*\*/gim, '<strong>$1</strong>')
+                .replace(/\n/g, '<br>');
+            reviewResult.innerHTML = html;
+            reviewResult.classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>
